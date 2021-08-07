@@ -1,17 +1,46 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+
+const mega = {
+    ping: () => alert("Привет")
+}
+
+const MegaContext = React.createContext(null)
+
+const Provider = ({value, children}) => (
+    <MegaContext.Provider value={value}>
+        {children}
+    </MegaContext.Provider>
+)
+const Sega = ({mega}) => (
+    <button onClick={mega.ping}>Жмакни меня</button>
+)
+
+const Giper = () => (
+    <div>
+        <h1>Я гипер</h1>
+        <MegaContext.Consumer>
+            {(mega) => (<Sega mega={mega}/>)}
+        </MegaContext.Consumer>
+
+    </div>
+)
+
+function App() {
+    return (
+        <div className="App">
+            <Giper />
+        </div>
+    );
+}
+
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+    <React.StrictMode>
+        <Provider value={mega}>
+            <App/>
+        </Provider>
+    </React.StrictMode>,
+    document.getElementById('root')
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
