@@ -1,80 +1,58 @@
-import React, {useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-// Обычные и колбэк рефы
-class SimpleRef extends React.PureComponent{
-    inputRef = React.createRef()
-    pElement = null
-    setPElement = el => this.pElement = el
-    componentDidMount() {
-        this.inputRef.current.value = 'Всё заработало'
-        this.pElement.innerText = 'И тут работает'
+const LoggerHOC = (Comp) => {
+    class Logger extends React.PureComponent {
+
+        componentDidMount() {
+            console.log("Текущие пропсы", this.props)
+        }
+
+        componentDidUpdate(prevProps, prevState, snapshot) {
+            console.log("Прошлые пропсы", prevProps)
+            console.log("Текущие пропсы", this.props)
+        }
+
+        render() {
+            return <Comp {...this.props} ref={this.props.forwarderRef}/>
+        }
     }
 
-    render() {
-        return (
-            <div>
-                <input ref={this.inputRef} />
-                <p ref={this.setPElement} />
-            </div>
-        )
-    }
+    return React.forwardRef((props, ref) => <Logger {...props} forwarderRef={ref}/>)
+
 }
-
-// проброс колбэк рефа в дочерний компонент и обманка с другим именем пропса
-class ChildRef extends React.PureComponent{
-    inputElement = null
-    setInputElement = el => this.inputElement = el
-    secondInputRef = React.createRef()
-    componentDidMount() {
-        this.inputElement.value = 'Я смог вставить текст в дочернем элементе'
-        this.secondInputRef.current.value = 'И тут всех обманул'
-    }
-    render() {
-        return(
-            <div>
-                <p>Вставляем потомку</p>
-                <ChildInput refProp={this.setInputElement} /><br />
-                <ChildInput refProp={this.secondInputRef} />
-            </div>
-        )
-    }
-}
-
-const ChildInput = ({refProp}) => <input ref={refProp} />
 
 const ForwardedInput = React.forwardRef((props, ref) => (
     <div>
         <p>Лучший инпут в городе</p>
-        <input ref={ref}/>
+        <input ref={ref} value={props.value} onChange={event => {props.input(event.target.value)}} />
     </div>
 
 ))
 
-// Использование форвард реф.
+const MegaForwardedInput = LoggerHOC(ForwardedInput)
+
 const ForwardRef = () => {
     const ref = useRef()
     const clickHandler = () => {
         ref.current.value = 'меня кликнули'
         ref.current.focus()
     }
+    const [inputValue, setInputValue] = useState('привет')
     return (
         <div>
-            <ForwardedInput ref={ref} />
+            <MegaForwardedInput ref={ref} value={inputValue} input={setInputValue}/>
             <button onClick={clickHandler}>Жми</button>
         </div>
     )
 }
 
 
-
 function App() {
     return (
         <div className="App">
-            <SimpleRef />
-            <ChildRef />
-            <ForwardRef />
+            <ForwardRef/>
         </div>
     );
 }
@@ -82,7 +60,7 @@ function App() {
 
 ReactDOM.render(
     <React.StrictMode>
-            <App/>
+        <App/>
     </React.StrictMode>,
     document.getElementById('root')
 );
