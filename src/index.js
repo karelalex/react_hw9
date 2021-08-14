@@ -1,11 +1,10 @@
-import React from 'react';
+import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import {Button, makeStyles, TextField} from "@material-ui/core";
-import {useForm} from "react-hook-form";
-import {yupResolver} from "@hookform/resolvers/yup";
-import * as yup from 'yup'
+import axios from "axios";
 
+const API_KEY = 'a11070a4af37df186a9157cc0dbb3a72'
 const useStyles = makeStyles((theme) => ({
     root: {
         '& > *': {
@@ -15,49 +14,41 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const schema = yup.object().shape({
-    userName: yup.string()
-        .required('Поле обязательно для заполнения'),
-    password: yup.string()
-        .required('Поле обязательно для заполнения')
-        .min(5, 'Должно быть минимум 5 символов'),
-    email: yup.string()
-        .required('Поле обязательно для заполнения')
-        .email('Поле должно быть корректным адресом электронной почты')
-
-})
 
 const Form = () => {
     const classes = useStyles();
-    const {register, handleSubmit, formState: {errors}} = useForm({
-        resolver: yupResolver(schema)
+    const [message, setMessage] = useState('')
+    const onSubmit = async (e) => {
+        e.preventDefault()
+        const cityName = e.target.elements.city.value
+        if (cityName) {
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${API_KEY}&units=metric`
+            try {
+                const result = await axios.get(url).then(response => response.data)
+                setMessage(`В городе ${cityName} прям ща температура ${result.main.temp}`)
+            }
+            catch (e) {
+                setMessage('Ошибка запроса')
+            }
 
-    })
-    const onSubmit = data => console.log(data)
+        }
+    }
     return (
-        <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-                id="name"
-                label="Имя" {...register('userName')}
-                helperText={errors.userName?.message}
-                error={errors.userName}
-            />
-            <TextField
-                id="email"
-                label="Электронная почта" {...register('email')}
-                helperText={errors.email?.message}
-                error={errors.email}
-            />
-            <TextField
-                id="pass"
-                label="Пароль"
-                type="password" {...register('password')}
-                helperText={errors.password?.message} error={errors.password}
-            />
-            <Button variant="contained" color="primary" type="submit">
-                Отправить
-            </Button>
-        </form>
+        <>
+            <form className={classes.root} noValidate autoComplete="off" onSubmit={onSubmit}>
+                <TextField
+                    id="city"
+                    name="city"
+                    label="Город"
+                />
+
+                <Button variant="contained" color="primary" type="submit">
+                    Отправить
+                </Button>
+            </form>
+            <div>{message}</div>
+        </>
+
     );
 }
 
